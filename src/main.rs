@@ -7,6 +7,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
         .add_system(player_input)
+        .add_system(handle_bullets)
         .run();
 }
 
@@ -32,6 +33,12 @@ fn setup(
     //         ..Default::default()
     //     })
     //     .id();
+
+    let player_tank = asset_server.load("single_sprites/tank_blue.png");
+    commands.insert_resource(Textures {
+        _player_tank: player_tank.clone(),
+        bullet: asset_server.load("single_sprites/bulletBlue2_outline.png"),
+    });
     commands.spawn((
         SpriteBundle {
             transform: Transform {
@@ -42,7 +49,7 @@ fn setup(
                 flip_y: true,
                 ..Default::default()
             },
-            texture: asset_server.load("single_sprites/tank_blue.png"),
+            texture: player_tank,
             ..default()
         },
         Player,
@@ -54,11 +61,13 @@ fn setup(
 struct Player;
 const PLAYER_MOVEMENT_SPEED: f32 = 100.0;
 // 1 * PI/180.0 == 1 degree in radians
-const PLAYER_ROTATION_SPEED: f32 = 55.0 * PI / 180.0;
+const PLAYER_ROTATION_SPEED: f32 = 70.0 * PI / 180.0;
 fn player_input(
     mut player_query: Query<&mut Transform, With<Player>>,
     keyboard: Res<Input<KeyCode>>,
     time: Res<Time>,
+    mut commands: Commands,
+    textures: Res<Textures>,
 ) {
     let mut player_transform = player_query.single_mut();
     if keyboard.pressed(KeyCode::W) {
@@ -74,5 +83,54 @@ fn player_input(
     }
     if keyboard.pressed(KeyCode::A) {
         player_transform.rotate_z(PLAYER_ROTATION_SPEED * time.delta_seconds());
+    }
+    if keyboard.just_pressed(KeyCode::Space) {
+        commands.spawn((
+            SpriteBundle {
+                transform: Transform {
+                    translation: player_transform.translation + player_transform.up() * 10.0,
+                    ..*player_transform
+                },
+                texture: textures.bullet.clone(),
+                ..Default::default()
+            },
+            Bullet::new(),
+        ));
+    }
+}
+
+const BULLET_SPEED: f32 = 150.0;
+
+fn handle_bullets(
+    mut bullet_query: Query<(&mut Transform, &mut Bullet, Entity)>,
+    time: Res<Time>,
+    mut commands: Commands,
+) {
+    for (mut bullet_transform, mut bullet, entity) in bullet_query.iter_mut() {
+        let forward = bullet_transform.up() * BULLET_SPEED * time.delta_seconds();
+        bullet_transform.translation += forward;
+        bullet.timer.tick(time.delta());
+        if bullet.timer.just_finished() {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+#[derive(Resource)]
+struct Textures {
+    _player_tank: Handle<Image>,
+    bullet: Handle<Image>,
+}
+
+#[derive(Component)]
+struct Bullet {
+    timer: Timer,
+}
+
+impl Bullet {
+    fn new() -> Self {
+        Self {
+            timer: Timer::from_seconds(2.0, TimerMode::Once),
+        }
     }
 }
