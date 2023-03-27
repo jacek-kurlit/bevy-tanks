@@ -1,10 +1,14 @@
 use bevy::{prelude::*, window::PrimaryWindow};
+use tanks::bullet::BulletsPlugin;
 use tanks::player::PlayerPlugin;
+use tanks::temporary::TemporaryObjectsPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
+        .add_plugin(BulletsPlugin)
+        .add_plugin(TemporaryObjectsPlugin)
         .add_startup_system(setup_camera)
         .run();
 }

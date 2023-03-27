@@ -1,14 +1,14 @@
 use std::f32::consts::PI;
 
+use crate::{bullet::spawn_bullet, temporary::TemporaryObject};
 use bevy::{prelude::*, window::PrimaryWindow};
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup)
-            .add_system(handle_player_input)
-            .add_system(handle_temporary_objects)
-            .add_system(move_bullets);
+            .add_system(handle_player_input);
     }
 }
 fn setup(
@@ -40,7 +40,6 @@ fn setup(
             current_transform: tank_transform,
             move_speed: PLAYER_MOVEMENT_SPEED,
             rotation_speed: PLAYER_ROTATION_SPEED,
-            bullet_sprite: asset_server.load("single_sprites/bulletBlue2_outline.png"),
             tracks: Tracks {
                 tracks_sprite: asset_server.load("single_sprites/tracksSmall.png"),
                 last_track_position: Vec3::default(),
@@ -81,40 +80,14 @@ fn handle_player_input(
         player_transform.rotation = new_rotation;
     }
     if keyboard.just_pressed(KeyCode::Space) {
-        commands.spawn((
-            SpriteBundle {
-                transform: Transform {
-                    translation: player_transform.translation + player_transform.up() * 10.0,
-                    ..*player_transform
-                },
-                texture: textures.bullet.clone(),
-                ..Default::default()
-            },
-            Bullet,
-            TemporaryObject::new(2.0),
-        ));
-    }
-}
-
-const BULLET_SPEED: f32 = 150.0;
-
-fn move_bullets(mut bullet_query: Query<&mut Transform, With<Bullet>>, time: Res<Time>) {
-    for mut bullet_transform in bullet_query.iter_mut() {
-        let forward = bullet_transform.up() * BULLET_SPEED * time.delta_seconds();
-        bullet_transform.translation += forward;
-    }
-}
-
-fn handle_temporary_objects(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut query: Query<(&mut TemporaryObject, Entity)>,
-) {
-    for (mut temporary_object, entity) in query.iter_mut() {
-        temporary_object.timer.tick(time.delta());
-        if temporary_object.timer.just_finished() {
-            commands.entity(entity).despawn();
-        }
+        spawn_bullet(
+            *player_transform,
+            //FIXME: depends on player upgrades
+            150.0,
+            2.0,
+            textures.bullet.clone(),
+            &mut commands,
+        );
     }
 }
 
@@ -123,28 +96,11 @@ struct Textures {
     bullet: Handle<Image>,
 }
 
-#[derive(Component)]
-struct Bullet;
-
-#[derive(Component)]
-struct TemporaryObject {
-    timer: Timer,
-}
-
-impl TemporaryObject {
-    fn new(duration_seconds: f32) -> Self {
-        Self {
-            timer: Timer::from_seconds(duration_seconds, TimerMode::Once),
-        }
-    }
-}
-
 #[derive(Component, Default)]
 struct Tank {
     current_transform: Transform,
     move_speed: f32,
     rotation_speed: f32,
-    bullet_sprite: Handle<Image>,
     tracks: Tracks,
 }
 
