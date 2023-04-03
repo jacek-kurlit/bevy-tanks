@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::{bullet::spawn_bullet, temporary::TemporaryObject};
+use crate::{bullet::spawn_bullet, tracks::Tracks};
 use bevy::{prelude::*, window::PrimaryWindow};
 
 pub struct PlayerPlugin;
@@ -40,11 +40,7 @@ fn setup(
             current_transform: tank_transform,
             move_speed: PLAYER_MOVEMENT_SPEED,
             rotation_speed: PLAYER_ROTATION_SPEED,
-            tracks: Tracks {
-                tracks_sprite: asset_server.load("single_sprites/tracksSmall.png"),
-                last_track_position: Vec3::default(),
-                ..Default::default()
-            },
+            tracks: Tracks::new(asset_server.load("single_sprites/tracksSmall.png")),
         },
     ));
 }
@@ -102,45 +98,6 @@ struct Tank {
     move_speed: f32,
     rotation_speed: f32,
     tracks: Tracks,
-}
-
-struct Tracks {
-    tracks_sprite: Handle<Image>,
-    last_track_position: Vec3,
-    new_tracks_distance: f32,
-    ttl: f32,
-}
-
-impl Tracks {
-    fn update_tracks(&mut self, new_position: &Transform, commands: &mut Commands) {
-        let distance = new_position.translation.distance(self.last_track_position);
-        if distance > self.new_tracks_distance {
-            let tracks_position = new_position.translation + new_position.down() * 10.0;
-            commands.spawn((
-                SpriteBundle {
-                    transform: Transform {
-                        translation: tracks_position,
-                        ..*new_position
-                    },
-                    texture: self.tracks_sprite.clone(),
-                    ..Default::default()
-                },
-                TemporaryObject::new(self.ttl),
-            ));
-            self.last_track_position = tracks_position;
-        }
-    }
-}
-
-impl Default for Tracks {
-    fn default() -> Self {
-        Self {
-            tracks_sprite: Handle::default(),
-            last_track_position: Vec3::default(),
-            new_tracks_distance: 62.0,
-            ttl: 2.0,
-        }
-    }
 }
 
 impl Tank {

@@ -12,6 +12,14 @@ pub struct TemporaryObject {
     timer: Timer,
 }
 
+impl Default for TemporaryObject {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(1.0, TimerMode::Once),
+        }
+    }
+}
+
 impl TemporaryObject {
     pub fn new(duration_seconds: f32) -> Self {
         Self {
