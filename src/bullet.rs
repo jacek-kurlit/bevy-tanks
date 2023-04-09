@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::temporary::TemporaryObject;
+use crate::{tank::TankAmmunitation, temporary::TemporaryObject};
 
 pub struct BulletsPlugin;
 
@@ -12,9 +12,7 @@ impl Plugin for BulletsPlugin {
 
 pub fn spawn_bullet(
     transform: Transform,
-    speed: f32,
-    ttl: f32,
-    bullet_image: Handle<Image>,
+    tank_ammunition: &TankAmmunitation,
     commands: &mut Commands,
 ) {
     commands.spawn((
@@ -23,13 +21,16 @@ pub fn spawn_bullet(
                 translation: transform.translation + transform.up() * 15.0,
                 ..transform
             },
-            texture: bullet_image,
+            texture: tank_ammunition.bullet_image.clone(),
             ..Default::default()
         },
-        Bullet { speed },
-        TemporaryObject::new(ttl),
+        Bullet {
+            speed: tank_ammunition.bullet_speed,
+        },
+        TemporaryObject::new(tank_ammunition.bullet_tll),
     ));
 }
+
 #[derive(Component)]
 struct Bullet {
     speed: f32,

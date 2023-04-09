@@ -1,6 +1,7 @@
 use crate::temporary::TemporaryObject;
 use bevy::prelude::*;
 
+#[derive(Component)]
 pub struct Tracks {
     tracks_sprite: Handle<Image>,
     last_track_position: Vec3,
