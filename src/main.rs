@@ -1,14 +1,19 @@
 use bevy::{prelude::*, window::PrimaryWindow};
+use bevy_rapier2d::prelude::*;
 use tanks::bullet::BulletsPlugin;
+use tanks::enemy::EnemyPlugin;
 use tanks::player::PlayerPlugin;
 use tanks::temporary::TemporaryObjectsPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(PlayerPlugin)
         .add_plugin(BulletsPlugin)
         .add_plugin(TemporaryObjectsPlugin)
+        .add_plugin(EnemyPlugin)
         .add_startup_system(setup_camera)
         .run();
 }

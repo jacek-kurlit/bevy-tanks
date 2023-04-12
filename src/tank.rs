@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::f32::consts::PI;
 
-use crate::tracks::Tracks;
+use crate::{bullet::TankAmmunitation, tracks::Tracks};
 
 #[derive(Bundle)]
 pub struct TankBundle {
@@ -18,6 +18,7 @@ impl TankBundle {
         tank_image: Handle<Image>,
         tracks_image: Handle<Image>,
         tank_ammunition_image: Handle<Image>,
+        flip_y: bool,
     ) -> Self {
         TankBundle {
             sprite: SpriteBundle {
@@ -26,7 +27,7 @@ impl TankBundle {
                     ..Default::default()
                 },
                 sprite: Sprite {
-                    flip_y: true,
+                    flip_y,
                     ..Default::default()
                 },
                 texture: tank_image,
@@ -35,25 +36,6 @@ impl TankBundle {
             tank: Tank::new(),
             tracks: Tracks::new(tracks_image),
             tank_ammunition: TankAmmunitation::new(tank_ammunition_image),
-        }
-    }
-}
-#[derive(Component)]
-pub struct TankAmmunitation {
-    pub bullet_speed: f32,
-    pub bullet_tll: f32,
-    pub bullet_image: Handle<Image>,
-}
-
-const INIT_BULLET_SPEED: f32 = 150.0;
-const INIT_BULLET_TLL: f32 = 2.0;
-
-impl TankAmmunitation {
-    pub fn new(bullet_image: Handle<Image>) -> Self {
-        TankAmmunitation {
-            bullet_speed: INIT_BULLET_SPEED,
-            bullet_tll: INIT_BULLET_TLL,
-            bullet_image,
         }
     }
 }
@@ -66,6 +48,7 @@ const INIT_ROTATION_SPEED: f32 = 70.0 * PI / 180.0;
 pub struct Tank {
     pub move_speed: f32,
     pub rotation_speed: f32,
+    health: u32,
 }
 
 impl Tank {
@@ -73,6 +56,7 @@ impl Tank {
         Self {
             move_speed: INIT_MOVEMENT_SPEED,
             rotation_speed: INIT_ROTATION_SPEED,
+            health: 100,
         }
     }
 }

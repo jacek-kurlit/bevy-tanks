@@ -1,9 +1,10 @@
 use crate::{
-    bullet::spawn_bullet,
-    tank::{Tank, TankAmmunitation, TankBundle},
+    bullet::{spawn_bullet, TankAmmunitation},
+    tank::{Tank, TankBundle},
     tracks::Tracks,
 };
 use bevy::{prelude::*, window::PrimaryWindow};
+use bevy_rapier2d::prelude::*;
 
 pub struct PlayerPlugin;
 
@@ -26,8 +27,13 @@ fn setup(
             asset_server.load("single_sprites/tank_blue.png"),
             asset_server.load("single_sprites/tracksSmall.png"),
             asset_server.load("single_sprites/bulletBlue2_outline.png"),
+            true,
         ),
         Player,
+        RigidBody::Dynamic,
+        GravityScale(0.0),
+        ColliderMassProperties::Mass(1000.0),
+        Collider::cuboid(25.0, 25.0),
     ));
 }
 
