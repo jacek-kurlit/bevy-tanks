@@ -1,5 +1,4 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_rapier2d::prelude::{Collider, ColliderMassProperties, GravityScale, RigidBody};
 
 use crate::tank::TankBundle;
 pub struct EnemyPlugin;
@@ -25,12 +24,8 @@ fn setup(
             asset_server.load("single_sprites/bulletRed2_outline.png"),
             false,
         ),
-        //TODO: move collision to TankBundle
-        RigidBody::Dynamic,
-        GravityScale(0.0),
-        ColliderMassProperties::Mass(1000.0),
-        Collider::cuboid(25.0, 25.0),
         Enemy,
+        Name::new("Ememy"),
     ));
 }
 #[derive(Component)]

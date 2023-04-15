@@ -1,10 +1,8 @@
 use crate::{
-    bullet::{spawn_bullet, TankAmmunitation},
-    tank::{Tank, TankBundle},
-    tracks::Tracks,
+    bullet::TankAmmunitation,
+    tank::{TankBundle, TankMovementIntention},
 };
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_rapier2d::prelude::*;
 
 pub struct PlayerPlugin;
 
@@ -29,45 +27,46 @@ fn setup(
             asset_server.load("single_sprites/bulletBlue2_outline.png"),
             true,
         ),
+        Name::new("Player"),
         Player,
-        RigidBody::Dynamic,
-        GravityScale(0.0),
-        ColliderMassProperties::Mass(1000.0),
-        Collider::cuboid(25.0, 25.0),
     ));
 }
 
 #[derive(Component)]
 struct Player;
 fn handle_player_input(
-    mut player_query: Query<(&mut Transform, &Tank, &TankAmmunitation, &mut Tracks), With<Player>>,
+    mut player_query: Query<
+        (
+            &mut Transform,
+            &mut TankMovementIntention,
+            &mut TankAmmunitation,
+        ),
+        With<Player>,
+    >,
     keyboard: Res<Input<KeyCode>>,
-    time: Res<Time>,
-    mut commands: Commands,
 ) {
-    let (mut player_transform, tank, tank_ammunition, mut tracks) = player_query.single_mut();
-    let mut movement_direction: Option<Vec3> = None;
-    let mut rotation_direction: Option<f32> = None;
+    let (player_transform, mut tank_movement_intention, mut tank_ammunition) =
+        player_query.single_mut();
+    let mut movement_velocity: Vec2 = Vec2::default();
+    let mut rotation_velocity = 0.0;
     if keyboard.pressed(KeyCode::W) {
-        movement_direction = Some(player_transform.up());
+        let up = player_transform.up();
+        movement_velocity = Vec2::new(up.x, up.y);
     }
     if keyboard.pressed(KeyCode::S) {
-        movement_direction = Some(player_transform.down());
+        let down = player_transform.down();
+        movement_velocity = Vec2::new(down.x, down.y);
     }
     if keyboard.pressed(KeyCode::D) {
-        rotation_direction = Some(-1.0);
+        rotation_velocity = -1.0;
     }
     if keyboard.pressed(KeyCode::A) {
-        rotation_direction = Some(1.0);
+        rotation_velocity = 1.0;
     }
-    if let Some(direction) = movement_direction {
-        player_transform.translation += direction * tank.move_speed * time.delta_seconds();
-        tracks.update_tracks(&player_transform, &mut commands);
-    }
-    if let Some(rotation) = rotation_direction {
-        player_transform.rotate_z(rotation * tank.rotation_speed * time.delta_seconds());
-    }
+
+    tank_movement_intention.movement_velocity = movement_velocity;
+    tank_movement_intention.rotation_velocity = rotation_velocity;
     if keyboard.just_pressed(KeyCode::Space) {
-        spawn_bullet(*player_transform, tank_ammunition, &mut commands);
+        tank_ammunition.fire_intent = true;
     }
 }
